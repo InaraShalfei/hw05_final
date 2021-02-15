@@ -1,9 +1,10 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
 
-from .models import Post, Group
+from .models import Post, Group, Comment, Follow
 from .forms import CommentForm, PostForm
 
 User = get_user_model()
@@ -27,22 +28,28 @@ def group_posts(request, slug):
 
 
 def profile(request, username):
-    user = get_object_or_404(User, username=username)
-    posts = user.posts.all()
+    author = get_object_or_404(User, username=username)
+    posts = author.posts.all()
     paginator = Paginator(posts, 10)
     page_number = request.GET.get("page")
     page = paginator.get_page(page_number)
-    return render(request, "profile.html", {"author": user,
-                                            "page": page, "paginator": paginator})
+    if not request.user.is_authenticated:
+        following = False
+    else:
+        following = Follow.objects.filter(user=request.user, author=author).exists()
+    return render(request, "profile.html", {"author": author,
+                                            "page": page, "paginator": paginator, "following": following})
 
 
 def post_view(request, username, post_id):
     user = get_object_or_404(User, username=username)
     post = get_object_or_404(Post, id=post_id, author=user)
     form = CommentForm()
+    comments = Comment.objects.filter(post=post)
     return render(request, "post.html", {"author": user,
                                          "post": post,
-                                         "form": form})
+                                         "form": form,
+                                         "comments": comments})
 
 
 def post_edit(request, username, post_id):
@@ -71,6 +78,8 @@ def new_post(request):
 
 
 def add_comment(request, username, post_id):
+    if not request.user.is_authenticated:
+        return redirect("%s?next=%s" % (settings.LOGIN_URL, request.path))
     form = CommentForm(request.POST or None)
     post = get_object_or_404(Post, id=post_id, author__username=username)
     if request.method == "POST":
@@ -83,6 +92,35 @@ def add_comment(request, username, post_id):
     return render(request, "post.html", {"author": post.author,
                                          "post": post,
                                          "form": form})
+
+
+@login_required
+def follow_index(request):
+    # информация о текущем пользователе доступна в переменной request.user
+    # ...
+    if not request.user.is_authenticated:
+        return redirect("%s?next=%s" % (settings.LOGIN_URL, request.path))
+    user = request.user
+    post_list = user.posts.all()
+    paginator = Paginator(post_list, 10)
+    page_number = request.GET.get("page")
+    page = paginator.get_page(page_number)
+    return render(request, "follow.html", {"page": page, "paginator": paginator})
+
+
+@login_required
+def profile_follow(request, username):
+    author = get_object_or_404(User, username=username)
+    user = request.user
+    if user != author:
+        Follow.objects.get_or_create(author=author, user=user)
+    return redirect("profile", username=username)
+
+
+@login_required
+def profile_unfollow(request, username):
+    # ...
+    pass
 
 
 def page_not_found(request, exception):

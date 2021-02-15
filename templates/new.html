@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Редактировать запись{% endblock %}
+<h1>{% block header %}{% endblock %}</h1>
+
+
+{% block content %}
+{% load user_filters %}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 p-5">
+        <div class="card">
+            <div class="card-header">
+                {% if request.user.username == username %}
+                Редактировать запись
+                {% else %}
+                Добавить запись
+                {% endif %}
+            </div>
+            <hr>
+            <div class="card-body">
+                <form
+                        method="POST" enctype="multipart/form-data"
+                        {% if request.user.username == username %}
+                        action="{% url 'post_edit' username=username post_id=post.id %}"
+                        {% else %}
+                        action="{% url 'new_post' %}"
+                        {% endif %}
+                >
+
+                    {% csrf_token %}
+
+                    {% for field in form %}
+                    <div
+                            class="form-group row"
+                            aria-required="{% if field.field.required %}true{% else %}false{% endif %}"
+                    >
+                        <label for="{{ field.id_for_label }}" class="col-md-4 col-form-label text-md-right">
+                            {{ field.label }}{% if field.field.required %}<span class="required">*</span>{% endif%}</label>
+                        <div class="col-md-6">
+                            {{ field|addclass:"form-control" }}
+                        </div>
+                    </div>
+                    <div class="card">
+                        {% endfor %}
+
+                        <button type="submit" class="btn btn-primary">
+                            {% if request.user.username == username %}
+                            Сохранить
+                            {% else %}
+                            Добавить
+                            {% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

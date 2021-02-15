@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Профиль пользователя{% endblock %}
+{% block header %}{% endblock %}
+{% block content %}
+
+<main role="main" class="container">
+    <div class="row">
+        {% include "includes/author_card.html" %}
+    </div>
+
+    <div class="col-md-9">
+
+        <!-- Начало блока с отдельным постом -->
+        {% include "includes/post_card.html" %}
+        {% include "includes/comments.html" %}
+        {% include "includes/paginator.html" %}
+
+    </div>
+
+</main>
+{% endblock %}

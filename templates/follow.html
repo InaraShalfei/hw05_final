@@ -1,5 +1,17 @@
-{% extends "index.html" %}
+{% extends "base.html" %}
 {% block title %}Посты авторов{% endblock %}
 {% block header %}Посты авторов{% endblock %}
 {% block content %}
+    {% load cache %}
+    {% cache 20 follow_page page.number %}
+        <div class="container">
+            {% include "includes/menu.html" with index=True %}
+            {% for post in page %}
+                {% include "includes/post_card.html" with post=post %}
+            {% endfor %}
+        </div>
+        {% if page.has_other_pages %}
+            {% include "includes/paginator.html" with items=page paginator=paginator%}
+        {% endif %}
+    {% endcache %}
 {% endblock %}

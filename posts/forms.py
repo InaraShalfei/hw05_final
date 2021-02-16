@@ -14,5 +14,3 @@ class CommentForm(forms.ModelForm):
         model = Comment
         fields = ['text']
         text = forms.CharField(max_length=100, widget=forms.Textarea)
-
-

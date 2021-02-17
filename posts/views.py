@@ -77,9 +77,8 @@ def new_post(request):
     return render(request, "new.html", {"form": form})
 
 
+@login_required
 def add_comment(request, username, post_id):
-    if not request.user.is_authenticated:
-        return redirect("%s?next=%s" % (settings.LOGIN_URL, request.path))
     form = CommentForm(request.POST or None)
     post = get_object_or_404(Post, id=post_id, author__username=username)
     if request.method == "POST":

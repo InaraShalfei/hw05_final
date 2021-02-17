@@ -135,3 +135,23 @@ class PostUrlTests(TestCase):
         url = f'/{username}/{post_id}/comment/'
         response = self.guest_client.get(url)
         self.assertRedirects(response, f'/auth/login/?next={url}')
+
+    def test_follow_unfollow_redirect_for_anonymous(self):
+        username = PostUrlTests.post.author.username
+        url = f'/{username}/follow/'
+        url_1 = f'/{username}/unfollow/'
+        response = self.guest_client.get(url)
+        response_1 = self.guest_client.get(url_1)
+        self.assertRedirects(response, f'/auth/login/?next={url}')
+        self.assertRedirects(response_1, f'/auth/login/?next={url_1}')
+
+    def test_follow_unfollow_redirect_for_authorized_client(self):
+        username = PostUrlTests.post.author.username
+        url = f'/{username}/follow/'
+        url_1 = f'/{username}/unfollow/'
+        response = self.authorized_client.get(url)
+        response_1 = self.authorized_client.get(url_1)
+        self.assertRedirects(response, f'/{username}/')
+        self.assertRedirects(response_1, f'/{username}/')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response_1.status_code, 302)

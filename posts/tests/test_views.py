@@ -185,7 +185,7 @@ class PostPagesTests(TestCase):
                 text='Текст',
                 group=PostPagesTests.group,
                 image=uploaded,
-            )
+        )
         user = post.author
         templates_pages_names = {
             'index.html': reverse('index'),

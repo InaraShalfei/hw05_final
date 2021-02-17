@@ -181,10 +181,10 @@ class PostPagesTests(TestCase):
             content_type='image/gif'
         )
         post = Post.objects.create(
-                author=PostPagesTests.user,
-                text='Текст',
-                group=PostPagesTests.group,
-                image=uploaded,
+            author=PostPagesTests.user,
+            text='Текст',
+            group=PostPagesTests.group,
+            image=uploaded,
         )
         user = post.author
         templates_pages_names = {

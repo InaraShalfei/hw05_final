@@ -95,8 +95,6 @@ def add_comment(request, username, post_id):
 
 @login_required
 def follow_index(request):
-    if not request.user.is_authenticated:
-        return redirect("%s?next=%s" % (settings.LOGIN_URL, request.path))
     post_list = Post.objects.filter(author__following__user=request.user).all()
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get("page")
@@ -106,8 +104,6 @@ def follow_index(request):
 
 @login_required
 def profile_follow(request, username):
-    if not request.user.is_authenticated:
-        return redirect("%s?next=%s" % (settings.LOGIN_URL, request.path))
     author = get_object_or_404(User, username=username)
     user = request.user
     if user != author:
@@ -117,8 +113,6 @@ def profile_follow(request, username):
 
 @login_required
 def profile_unfollow(request, username):
-    if not request.user.is_authenticated:
-        return redirect("%s?next=%s" % (settings.LOGIN_URL, request.path))
     author = get_object_or_404(User, username=username)
     Follow.objects.filter(user=request.user, author=author).delete()
     return redirect("profile", username=username)

@@ -2,8 +2,8 @@ import datetime
 import shutil
 import tempfile
 
-from django.conf import settings
 from django import forms
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -11,7 +11,7 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from posts.forms import PostForm
-from posts.models import Group, Post
+from posts.models import Follow, Group, Post
 
 User = get_user_model()
 
@@ -238,3 +238,26 @@ class PostPagesTests(TestCase):
         cache.clear()
         response = self.authorized_client.get(reverse('index'))
         self.assertContains(response, new_post_text)
+
+    def test_post_creation_if_user_follow(self):
+        post = Post.objects.create(
+            author=self.user,
+            text='Post',
+            group=PostPagesTests.group,
+        )
+        author = post.author
+        self.user = User.objects.create_user('Mary', 'admin_12@test.com', 'pass')
+        self.user_1 = User.objects.create_user('John', 'admin_1@test.com', 'pass')
+        Follow.objects.create(author=author, user=self.user)
+        follower = Client()
+        follower.force_login(self.user)
+        non_follower = Client()
+        non_follower.force_login(self.user_1)
+        response = follower.get(reverse('follow_index'))
+        response_1 = non_follower.get(reverse('follow_index'))
+        page = response.context.get('page')
+        page_1 = response_1.context.get('page')
+        page_posts = page.object_list
+        page_1_posts = page_1.object_list
+        self.assertIn(post, page_posts)
+        self.assertNotIn(post, page_1_posts)

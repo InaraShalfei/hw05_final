@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.http import HttpResponse
 from django.test import TestCase, Client
 from django.contrib.auth import get_user_model
@@ -126,3 +127,11 @@ class PostUrlTests(TestCase):
         response = self.authorized_client.get(f'/{username}wrong/')
         self.assertEqual(response.status_code, 404)
         self.assertTemplateUsed(response, 'misc/404.html')
+
+    def test_add_comment_redirect_for_anonymous(self):
+        post = PostUrlTests.post
+        post_id = post.id
+        username = post.author.username
+        url = f'/{username}/{post_id}/comment/'
+        response = self.guest_client.get(url)
+        self.assertRedirects(response, f'/auth/login/?next={url}')

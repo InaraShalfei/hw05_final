@@ -26,6 +26,11 @@ class NewPostFormTest(TestCase):
             slug='test-slug',
             description='Gruppa chtoby govorit privet',
         )
+        cls.post = Post.objects.create(
+            author=cls.user,
+            text='Старый текст.',
+            group=cls.group,
+        )
 
     @classmethod
     def tearDownClass(cls):
@@ -33,7 +38,6 @@ class NewPostFormTest(TestCase):
         super().tearDownClass()
 
     def setUp(self):
-        self.user = get_user_model().objects.create_user(username='Mike')
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
@@ -69,11 +73,7 @@ class NewPostFormTest(TestCase):
         self.assertIsNotNone(latest_post.image.url)
 
     def test_post_edit_form(self):
-        post = Post.objects.create(
-            author=self.user,
-            text='Старый текст.',
-            group=NewPostFormTest.group,
-        )
+        post = NewPostFormTest.post
         posts_count = Post.objects.count()
         data = {'group': NewPostFormTest.group.id,
                 'text': 'Новый текст'}
@@ -88,3 +88,15 @@ class NewPostFormTest(TestCase):
                                                        "post_id": post.id}))
         self.assertEqual(post.text, 'Новый текст')
         self.assertEqual(Post.objects.count(), posts_count)
+
+    def test_comment_form_for_authorized_client(self):
+        post = NewPostFormTest.post
+        form_data = {'post': NewPostFormTest.post.id,
+                     'author': NewPostFormTest.post.author,
+                     'text': 'Текст комментария'}
+        response = self.authorized_client.post(reverse('add_comment',
+                                                       kwargs={"username": post.author.username, "post_id": post.id}),
+                                               data=form_data,
+                                               follow=True)
+        self.assertRedirects(response, reverse('add_comment',
+                                               kwargs={"username": post.author.username, "post_id": post.id}))

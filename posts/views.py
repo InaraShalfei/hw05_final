@@ -43,11 +43,10 @@ def profile(request, username):
 
 
 def post_view(request, username, post_id):
-    user = get_object_or_404(User, username=username)
-    post = get_object_or_404(Post, id=post_id, author=user)
+    post = get_object_or_404(Post, id=post_id, author__username=username)
     form = CommentForm()
     comments = Comment.objects.filter(post=post)
-    return render(request, "post.html", {"author": user,
+    return render(request, "post.html", {"author": post.author,
                                          "post": post,
                                          "form": form,
                                          "comments": comments})

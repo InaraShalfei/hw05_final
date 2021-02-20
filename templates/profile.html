@@ -25,11 +25,11 @@
 
     <div class="col-md-9">
         {% for post in page %}
-        {% include "includes/post_card.html" %}
+            {% include "includes/post_card.html" %}
 
-        {% if not forloop.last %}
-        <hr>
-        {% endif %}
+            {% if not forloop.last %}
+                <hr>
+            {% endif %}
         {% endfor %}
 
         <!-- Здесь постраничная навигация паджинатора -->

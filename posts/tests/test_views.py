@@ -247,17 +247,24 @@ class PostPagesTests(TestCase):
         )
         author = post.author
         user = User.objects.create_user('Mary', 'admin_12@test.com', 'pass')
-        user_1 = User.objects.create_user('John', 'admin_1@test.com', 'pass')
         Follow.objects.create(author=author, user=user)
         follower = Client()
         follower.force_login(user)
-        non_follower = Client()
-        non_follower.force_login(user_1)
         response = follower.get(reverse('follow_index'))
-        response_1 = non_follower.get(reverse('follow_index'))
         page = response.context.get('page')
-        page_1 = response_1.context.get('page')
         page_posts = page.object_list
-        page_1_posts = page_1.object_list
         self.assertIn(post, page_posts)
-        self.assertNotIn(post, page_1_posts)
+
+    def test_post_creation_if_user_non_follow(self):
+        post = Post.objects.create(
+            author=self.user,
+            text='Post',
+            group=PostPagesTests.group,
+        )
+        user = User.objects.create_user('John', 'admin@test.com', 'pass')
+        non_follower = Client()
+        non_follower.force_login(user)
+        response = non_follower.get(reverse('follow_index'))
+        page = response.context.get('page')
+        page_posts = page.object_list
+        self.assertNotIn(post, page_posts)

@@ -1,11 +1,13 @@
 {% if user.is_authenticated %}
 <div class="row">
     <ul class="nav nav-tabs">
+        {% if request.resolver_match.url_name == 'index' %}
         <li class="nav-item">
-            <a class="nav-link {% if index %}active{% endif %}" href="{% url 'index' %}">
+            <a class="nav-link " href="{% url 'index' %}">
                 Все авторы
             </a>
         </li>
+        {% endif %}
         <li class="nav-item">
             <a class="nav-link {% if follow %}active{% endif %}" href="{% url 'follow_index' %}">
                 Избранные авторы

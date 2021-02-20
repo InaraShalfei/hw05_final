@@ -34,7 +34,9 @@ class Post(models.Model):
                               blank=True,
                               verbose_name="Группа поста",
                               null=True, help_text="Выбрать группу поста")
-    image = models.ImageField(upload_to="posts/", verbose_name="Изображение", blank=True, null=True)
+    image = models.ImageField(upload_to="posts/",
+                              verbose_name="Изображение",
+                              blank=True, null=True)
 
     class Meta:
         ordering = ["-pub_date"]
@@ -46,7 +48,8 @@ class Post(models.Model):
 
 
 class Comment(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="comments",
+    post = models.ForeignKey(Post, on_delete=models.CASCADE,
+                             related_name="comments",
                              verbose_name="Ссылка на пост")
     author = models.ForeignKey(User, on_delete=models.CASCADE,
                                related_name="comments",

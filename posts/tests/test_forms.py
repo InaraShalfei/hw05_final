@@ -89,7 +89,7 @@ class NewPostFormTest(TestCase):
         self.assertEqual(post.text, 'Новый текст')
         self.assertEqual(Post.objects.count(), posts_count)
 
-    def test_comment_form_for_authorized_client_and_for_anonymous(self):
+    def test_comment_form_for_authorized_client(self):
         post = NewPostFormTest.post
         form_data = {'post': NewPostFormTest.post.id,
                      'author': NewPostFormTest.post.author,
@@ -99,13 +99,19 @@ class NewPostFormTest(TestCase):
                                                                "post_id": post.id}),
                                                data=form_data,
                                                follow=True)
-        response_1 = self.guest_client.post(reverse('add_comment',
-                                                    kwargs={"username": post.author.username,
-                                                            "post_id": post.id}),
-                                            data=form_data,
-                                            follow=True)
-        url = f'/{post.author.username}/{post.id}/comment/'
         self.assertRedirects(response, reverse('add_comment',
                                                kwargs={"username": post.author.username,
                                                        "post_id": post.id}))
-        self.assertRedirects(response_1, f'/auth/login/?next={url}')
+
+    def test_comment_form_for_anonymous(self):
+        post = NewPostFormTest.post
+        form_data = {'post': NewPostFormTest.post.id,
+                     'author': NewPostFormTest.post.author,
+                     'text': 'Текст комментария'}
+        response = self.guest_client.post(reverse('add_comment',
+                                                  kwargs={"username": post.author.username,
+                                                          "post_id": post.id}),
+                                          data=form_data,
+                                          follow=True)
+        url = f'/{post.author.username}/{post.id}/comment/'
+        self.assertRedirects(response, f'/auth/login/?next={url}')

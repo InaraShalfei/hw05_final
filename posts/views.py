@@ -47,7 +47,7 @@ def post_view(request, username, post_id):
     return render(request, "post.html", {"author": post.author,
                                          "post": post,
                                          "form": form,
-                                         "comments": comments})
+                                         "comments": comments.all()})
 
 
 def post_edit(request, username, post_id):

@@ -45,7 +45,7 @@ def profile(request, username):
 def post_view(request, username, post_id):
     post = get_object_or_404(Post, id=post_id, author__username=username)
     form = CommentForm()
-    comments = Comment.objects.filter(post=post)
+    comments = post.comments.all()
     return render(request, "post.html", {"author": post.author,
                                          "post": post,
                                          "form": form,

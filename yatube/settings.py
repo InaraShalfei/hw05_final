@@ -137,3 +137,5 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     }
 }
+
+ITEMS_PER_PAGE = 10

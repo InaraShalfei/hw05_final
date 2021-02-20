@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
 
+from yatube import settings
 from .models import Comment, Follow, Group, Post
 from .forms import CommentForm, PostForm
 
@@ -11,7 +12,7 @@ User = get_user_model()
 
 def index(request):
     post_list = Post.objects.all()
-    paginator = Paginator(post_list, 10)
+    paginator = Paginator(post_list, settings.ITEMS_PER_PAGE)
     page_number = request.GET.get("page")
     page = paginator.get_page(page_number)
     return render(request, "index.html", {"page": page, "paginator": paginator})
@@ -20,7 +21,7 @@ def index(request):
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
     posts = group.posts.all()
-    paginator = Paginator(posts, 10)
+    paginator = Paginator(posts, settings.ITEMS_PER_PAGE)
     page_number = request.GET.get("page")
     page = paginator.get_page(page_number)
     return render(request, "group.html", {"group": group,
@@ -30,7 +31,7 @@ def group_posts(request, slug):
 def profile(request, username):
     author = get_object_or_404(User, username=username)
     posts = author.posts.all()
-    paginator = Paginator(posts, 10)
+    paginator = Paginator(posts, settings.ITEMS_PER_PAGE)
     page_number = request.GET.get("page")
     page = paginator.get_page(page_number)
     following = request.user.is_authenticated and Follow.objects.exists()
@@ -93,7 +94,7 @@ def add_comment(request, username, post_id):
 @login_required
 def follow_index(request):
     post_list = Post.objects.filter(author__following__user=request.user).all()
-    paginator = Paginator(post_list, 10)
+    paginator = Paginator(post_list, settings.ITEMS_PER_PAGE)
     page_number = request.GET.get("page")
     page = paginator.get_page(page_number)
     return render(request, "follow.html",

@@ -58,10 +58,9 @@ def post_edit(request, username, post_id):
     post = get_object_or_404(Post, id=post_id, author__username=username)
     form = PostForm(request.POST or None,
                     files=request.FILES or None, instance=post)
-    if request.method == "POST":
-        if form.is_valid():
-            form.save()
-            return redirect("post", username=username, post_id=post_id)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        return redirect("post", username=username, post_id=post_id)
     return render(request, "new.html", {"username": username,
                                         "post": post, "form": form})
 
@@ -69,12 +68,11 @@ def post_edit(request, username, post_id):
 @login_required
 def new_post(request):
     form = PostForm(request.POST or None, files=request.FILES or None)
-    if request.method == "POST":
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-            form.save()
-            return redirect("index")
+    if request.method == "POST" and form.is_valid():
+        post = form.save(commit=False)
+        post.author = request.user
+        form.save()
+        return redirect("index")
     return render(request, "new.html", {"form": form})
 
 
@@ -82,14 +80,14 @@ def new_post(request):
 def add_comment(request, username, post_id):
     form = CommentForm(request.POST or None)
     post = get_object_or_404(Post, id=post_id, author__username=username)
-    if request.method == "POST":
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.author = request.user
-            comment.post = post
-            form.save()
-            return redirect("add_comment",
-                            username=username, post_id=post.id)
+    if request.method == "POST" and form.is_valid():
+        comment = form.save(commit=False)
+        comment.author = request.user
+        comment.post = post
+        form.save()
+        return redirect("add_comment",
+                        username=username,
+                        post_id=post.id)
     return render(request, "post.html", {"author": post.author,
                                          "post": post,
                                          "form": form})

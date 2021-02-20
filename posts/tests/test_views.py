@@ -246,13 +246,13 @@ class PostPagesTests(TestCase):
             group=PostPagesTests.group,
         )
         author = post.author
-        self.user = User.objects.create_user('Mary', 'admin_12@test.com', 'pass')
-        self.user_1 = User.objects.create_user('John', 'admin_1@test.com', 'pass')
-        Follow.objects.create(author=author, user=self.user)
+        user = User.objects.create_user('Mary', 'admin_12@test.com', 'pass')
+        user_1 = User.objects.create_user('John', 'admin_1@test.com', 'pass')
+        Follow.objects.create(author=author, user=user)
         follower = Client()
-        follower.force_login(self.user)
+        follower.force_login(user)
         non_follower = Client()
-        non_follower.force_login(self.user_1)
+        non_follower.force_login(user_1)
         response = follower.get(reverse('follow_index'))
         response_1 = non_follower.get(reverse('follow_index'))
         page = response.context.get('page')

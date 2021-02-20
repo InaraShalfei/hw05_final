@@ -98,4 +98,5 @@ class NewPostFormTest(TestCase):
                                                data=form_data,
                                                follow=True)
         self.assertRedirects(response, reverse('add_comment',
-                                               kwargs={"username": post.author.username, "post_id": post.id}))
+                                               kwargs={"username": post.author.username,
+                                                       "post_id": post.id}))

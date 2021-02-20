@@ -4,7 +4,7 @@ from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
 
 from yatube import settings
-from .models import Comment, Follow, Group, Post
+from .models import Follow, Group, Post
 from .forms import CommentForm, PostForm
 
 User = get_user_model()

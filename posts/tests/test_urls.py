@@ -114,7 +114,6 @@ class PostUrlTests(TestCase):
 
     def test_post_edit_at_desired_location_for_post_author(self):
         post = PostUrlTests.post
-        post_id = post.id
         username = post.author.username
         author_client = Client()
         author_client.force_login(post.author)

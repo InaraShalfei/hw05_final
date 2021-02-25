@@ -4,6 +4,7 @@ import tempfile
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.shortcuts import resolve_url
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
@@ -113,5 +114,7 @@ class NewPostFormTest(TestCase):
                                                           "post_id": post.id}),
                                           data=form_data,
                                           follow=True)
-        url = f'/{post.author.username}/{post.id}/comment/'
-        self.assertRedirects(response, f'/auth/login/?next={url}')
+        url = reverse('add_comment', kwargs={"username": post.author.username,
+                                             "post_id": post.id})
+        self.assertRedirects(response, "%s?next=%s" %
+                             (resolve_url(settings.LOGIN_URL), url))

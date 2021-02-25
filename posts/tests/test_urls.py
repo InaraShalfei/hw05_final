@@ -1,7 +1,10 @@
-from django.test import TestCase, Client
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.shortcuts import resolve_url
+from django.test import TestCase, Client
+from django.urls import reverse
 
-from posts.models import Group, Post
+from posts.models import Group, Post, Follow
 
 User = get_user_model()
 
@@ -60,11 +63,13 @@ class PostUrlTests(TestCase):
 
     def test_new_url_redirect_anonymous_on_auth_login(self):
         response = self.guest_client.get('/new/', follow=True)
-        self.assertRedirects(response, '/auth/login/?next=/new/')
+        self.assertRedirects(response, "%s?next=%s" %
+                             (resolve_url(settings.LOGIN_URL), reverse('new_post')))
 
     def test_profile_at_desired_location(self):
         username = self.user.username
-        response = self.authorized_client.get(f'/{username}/')
+        response = self.authorized_client.get(reverse('profile',
+                                                      kwargs={'username': username}))
         self.assertEqual(response.status_code, 200)
 
     def test_profile_404_for_missed_username(self):
@@ -73,31 +78,39 @@ class PostUrlTests(TestCase):
 
     def test_post_view_at_desired_location(self):
         post = PostUrlTests.post
-        post_id = post.id
         username = post.author.username
-        response = self.authorized_client.get(f'/{username}/{post_id}/')
+        response = self.authorized_client.get(reverse('post',
+                                                      kwargs={'username': username,
+                                                              'post_id': post.id}))
         self.assertEqual(response.status_code, 200)
 
     def test_post_view_404_for_wrong_author(self):
         post = PostUrlTests.post
-        post_id = post.id
         username = post.author.username
-        response = self.authorized_client.get(f'/{username}wrong/{post_id}/')
+        response = self.authorized_client.get(reverse('post',
+                                                      kwargs={'username': f'{username}wrong',
+                                                              'post_id': post.id}))
         self.assertEqual(response.status_code, 404)
 
     def test_post_edit_redirect_for_anonymous(self):
         post = PostUrlTests.post
-        post_id = post.id
         username = post.author.username
-        response = self.guest_client.get(f'/{username}/{post_id}/edit/')
-        self.assertRedirects(response, f'/{username}/{post_id}/')
+        response = self.guest_client.get(reverse('post_edit',
+                                                 kwargs={'username': username,
+                                                         'post_id': post.id}))
+        self.assertRedirects(response, reverse('post',
+                                               kwargs={'username': username,
+                                                       'post_id': post.id}))
 
     def test_post_edit_redirect_for_authorized_user(self):
         post = PostUrlTests.post
-        post_id = post.id
         username = post.author.username
-        response = self.authorized_client.get(f'/{username}/{post_id}/edit/')
-        self.assertRedirects(response, f'/{username}/{post_id}/')
+        response = self.authorized_client.get(reverse('post_edit',
+                                                      kwargs={'username': username,
+                                                              'post_id': post.id}))
+        self.assertRedirects(response, reverse('post',
+                                               kwargs={'username': username,
+                                                       'post_id': post.id}))
 
     def test_post_edit_at_desired_location_for_post_author(self):
         post = PostUrlTests.post
@@ -105,51 +118,65 @@ class PostUrlTests(TestCase):
         username = post.author.username
         author_client = Client()
         author_client.force_login(post.author)
-        response = author_client.get(f'/{username}/{post_id}/edit/')
+        response = author_client.get(reverse('post_edit',
+                                             kwargs={'username': username,
+                                                     'post_id': post.id}))
         self.assertEqual(response.status_code, 200)
 
     def test_urls_uses_correct_template_for_post_edit(self):
         post = PostUrlTests.post
-        post_id = post.id
         username = post.author.username
         author_client = Client()
         author_client.force_login(post.author)
         template = 'new.html'
-        reverse_name = f'/{username}/{post_id}/edit/'
+        reverse_name = reverse('post_edit', kwargs={'username': username,
+                                                    'post_id': post.id})
         response = author_client.get(reverse_name)
         self.assertTemplateUsed(response, template)
 
     def test_return_404_if_page_not_found(self):
         post = PostUrlTests.post
         username = post.author.username
-        response = self.authorized_client.get(f'/{username}wrong/')
+        response = self.authorized_client.get(reverse('profile',
+                                                      kwargs={'username': f'{username}wrong'}))
         self.assertEqual(response.status_code, 404)
         self.assertTemplateUsed(response, 'misc/404.html')
 
     def test_add_comment_redirect_for_anonymous(self):
         post = PostUrlTests.post
-        post_id = post.id
-        username = post.author.username
-        url = f'/{username}/{post_id}/comment/'
+        url = reverse('add_comment', kwargs={'username': post.author.username,
+                                             "post_id": post.id})
         response = self.guest_client.get(url)
-        self.assertRedirects(response, f'/auth/login/?next={url}')
+        self.assertRedirects(response, "%s?next=%s" %
+                             (resolve_url(settings.LOGIN_URL), url))
 
-    def test_follow_unfollow_redirect_for_anonymous(self):
+    def test_follow_redirect_for_anonymous(self):
         username = PostUrlTests.post.author.username
-        url = f'/{username}/follow/'
-        url_1 = f'/{username}/unfollow/'
+        url = reverse('profile_follow', kwargs={'username': username})
         response = self.guest_client.get(url)
-        response_1 = self.guest_client.get(url_1)
-        self.assertRedirects(response, f'/auth/login/?next={url}')
-        self.assertRedirects(response_1, f'/auth/login/?next={url_1}')
+        self.assertRedirects(response, "%s?next=%s" %
+                             (resolve_url(settings.LOGIN_URL), url))
 
-    def test_follow_unfollow_redirect_for_authorized_client(self):
+    def test_unfollow_redirect_for_anonymous(self):
         username = PostUrlTests.post.author.username
-        url = f'/{username}/follow/'
-        url_1 = f'/{username}/unfollow/'
+        url = reverse('profile_unfollow', kwargs={'username': username})
+        response = self.guest_client.get(url)
+        self.assertRedirects(response, "%s?next=%s" %
+                             (resolve_url(settings.LOGIN_URL), url))
+
+    def test_follow_redirect_for_authorized_client(self):
+        username = PostUrlTests.post.author.username
+        url = reverse('profile_follow', kwargs={'username': username})
         response = self.authorized_client.get(url)
-        response_1 = self.authorized_client.get(url_1)
-        self.assertRedirects(response, f'/{username}/')
-        self.assertRedirects(response_1, f'/{username}/')
+        self.assertRedirects(response, reverse('profile',
+                                               kwargs={'username': username}))
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response_1.status_code, 302)
+
+    def test_unfollow_redirect_for_authorized_client(self):
+        Follow.objects.create(author=PostUrlTests.post.author, user=self.user)
+        username = PostUrlTests.post.author.username
+        url = reverse('profile_unfollow', kwargs={'username': username})
+        response = self.authorized_client.get(url)
+        self.assertRedirects(response, reverse('profile',
+                                               kwargs={'username': username}))
+        self.assertEqual(response.status_code, 302)

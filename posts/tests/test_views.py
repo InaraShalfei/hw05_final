@@ -287,3 +287,16 @@ class PostPagesTests(TestCase):
         self.authorized_client.get(reverse('profile_follow', kwargs={'username': self.user.username}))
         self.assertFalse(Follow.objects.filter(author=self.user, user=self.user).exists())
 
+    def test_user_cannot_follow_twice(self):
+        author = User.objects.create_user('John', 'admin@test.com', 'pass')
+        Follow.objects.create(author=author, user=self.user)
+        self.assertEqual(1, Follow.objects.filter(author=author, user=self.user).count())
+        self.authorized_client.get(reverse('profile_follow', kwargs={'username': author.username}))
+        self.assertEqual(1, Follow.objects.filter(author=author, user=self.user).count())
+
+    def test_user_cannot_unfollow_not_followed(self):
+        author = User.objects.create_user('John', 'admin@test.com', 'pass')
+        self.assertEqual(0, Follow.objects.filter(author=author, user=self.user).count())
+        response = self.authorized_client.get(reverse('profile_unfollow', kwargs={'username': author.username}))
+        self.assertEqual(0, Follow.objects.filter(author=author, user=self.user).count())
+        self.assertEqual(response.status_code, 404)

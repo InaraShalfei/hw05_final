@@ -268,3 +268,16 @@ class PostPagesTests(TestCase):
         page = response.context.get('page')
         page_posts = page.object_list
         self.assertNotIn(post, page_posts)
+
+    def test_user_can_follow(self):
+        author = User.objects.create_user('John', 'admin@test.com', 'pass')
+        self.assertFalse(Follow.objects.filter(author=author, user=self.user).exists())
+        self.authorized_client.get(reverse('profile_follow', kwargs={'username': author.username}))
+        self.assertTrue(Follow.objects.filter(author=author, user=self.user).exists())
+
+    def test_user_can_unfollow(self):
+        author = User.objects.create_user('John', 'admin@test.com', 'pass')
+        Follow.objects.create(author=author, user=self.user)
+        self.assertTrue(Follow.objects.filter(author=author, user=self.user).exists())
+        self.authorized_client.get(reverse('profile_unfollow', kwargs={'username': author.username}))
+        self.assertFalse(Follow.objects.filter(author=author, user=self.user).exists())

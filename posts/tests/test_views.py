@@ -68,7 +68,7 @@ class PostPagesTests(TestCase):
     def test_new_post_context(self):
         response = self.authorized_client.get(reverse('new_post'))
         context = response.context
-        self.assertIsInstance(context.get('form'), PostForm)
+        self.assertIsInstance(context['form'], PostForm)
 
         form_fields = {
             'group': forms.models.ModelChoiceField,
@@ -76,12 +76,12 @@ class PostPagesTests(TestCase):
             'image': forms.fields.ImageField,
         }
         for value, expected in form_fields.items():
-            form_field = context.get('form').fields.get(value)
+            form_field = context['form'].fields.get(value)
             self.assertIsInstance(form_field, expected)
 
     def test_homepage_context(self):
         response = self.authorized_client.get(reverse('index'))
-        page = response.context.get('page')
+        page = response.context['page']
         page_posts = page.object_list
         first_post = page_posts[0]
         first_post_text = first_post.text
@@ -92,21 +92,21 @@ class PostPagesTests(TestCase):
 
     def test_homepage_first_page_has_10_records(self):
         response = self.authorized_client.get(reverse('index'))
-        self.assertEqual(len(response.context.get('page').object_list), 10)
+        self.assertEqual(len(response.context['page'].object_list), 10)
 
     def test_homepage_second_page_has_5_records(self):
         response = self.authorized_client.get(reverse('index') + '?page=2')
-        self.assertEqual(len(response.context.get('page').object_list), 5)
+        self.assertEqual(len(response.context['page'].object_list), 5)
 
     def test_group_page_context(self):
         response = self.authorized_client.get(reverse('group', kwargs={'slug': 'test-slug'}))
-        self.assertEqual(response.context.get('group').title, 'Vsem privet')
-        self.assertEqual(response.context.get('group').description, 'Gruppa chtoby govorit privet')
-        self.assertEqual(response.context.get('group').slug, 'test-slug')
+        self.assertEqual(response.context['group'].title, 'Vsem privet')
+        self.assertEqual(response.context['group'].description, 'Gruppa chtoby govorit privet')
+        self.assertEqual(response.context['group'].slug, 'test-slug')
 
     def test_group_first_page_has_10_records(self):
         response = self.authorized_client.get(reverse('group', kwargs={'slug': 'test-slug'}))
-        self.assertEqual(len(response.context.get('page').object_list), 10)
+        self.assertEqual(len(response.context['page'].object_list), 10)
 
     def test_post_group_is_ok(self):
         post = Post.objects.create(
@@ -116,17 +116,17 @@ class PostPagesTests(TestCase):
         )
 
         response = self.authorized_client.get(reverse('index'))
-        page = response.context.get('page')
+        page = response.context['page']
         page_posts = page.object_list
         self.assertIn(post, page_posts)
 
         response_group = self.authorized_client.get(reverse('group', kwargs={'slug': 'test-slug'}))
-        page = response_group.context.get('page')
+        page = response_group.context['page']
         group_all_posts = page.object_list
         self.assertIn(post, group_all_posts)
 
         response_group_2 = self.authorized_client.get(reverse('group', kwargs={'slug': 'test-slug-2'}))
-        page = response_group_2.context.get('page')
+        page = response_group_2.context['page']
         group_all_posts_2 = page.object_list
         self.assertNotIn(post, group_all_posts_2)
 
@@ -134,22 +134,22 @@ class PostPagesTests(TestCase):
         post = PostPagesTests.post
         user = post.author
         response = self.authorized_client.get(reverse('profile', kwargs={'username': user}))
-        self.assertEqual(response.context.get('author'), user)
-        self.assertEqual(response.context.get('paginator').count, 15)
+        self.assertEqual(response.context['author'], user)
+        self.assertEqual(response.context['paginator'].count, 15)
 
     def test_profile_first_page_has_10_records(self):
         post = PostPagesTests.post
         user = post.author
         response = self.authorized_client.get(reverse('profile', kwargs={'username': user}))
-        self.assertEqual(len(response.context.get('page').object_list), 10)
+        self.assertEqual(len(response.context['page'].object_list), 10)
 
     def test_post_view_page_context(self):
         post = PostPagesTests.post
         user = post.author
         post_id = post.id
         response = self.authorized_client.get(reverse('post', kwargs={'username': user, 'post_id': post_id}))
-        self.assertEqual(response.context.get('author'), user)
-        self.assertEqual(response.context.get('post').id, post.id)
+        self.assertEqual(response.context['author'], user)
+        self.assertEqual(response.context['post'].id, post.id)
 
     def test_post_edit_page_context(self):
         post = Post.objects.create(
@@ -162,9 +162,9 @@ class PostPagesTests(TestCase):
         author_client.force_login(post.author)
         post_id = post.id
         response = author_client.get(reverse('post_edit', kwargs={'username': username, 'post_id': post_id}))
-        self.assertEqual(response.context.get('username'), username)
-        self.assertEqual(response.context.get('post').id, post.id)
-        self.assertIsInstance(response.context.get('form'), PostForm)
+        self.assertEqual(response.context['username'], username)
+        self.assertEqual(response.context['post'].id, post.id)
+        self.assertIsInstance(response.context['form'], PostForm)
 
     def test_image_in_context(self):
         small_gif = (
@@ -221,7 +221,7 @@ class PostPagesTests(TestCase):
         user = post.author
         post_id = post.id
         response = self.authorized_client.get(reverse('post', kwargs={'username': user, 'post_id': post_id}))
-        post = response.context.get('post')
+        post = response.context['post']
         self.assertIsNotNone(post.image.url)
 
     def test_cache_on_homepage(self):
@@ -251,7 +251,7 @@ class PostPagesTests(TestCase):
         follower = Client()
         follower.force_login(user)
         response = follower.get(reverse('follow_index'))
-        page = response.context.get('page')
+        page = response.context['page']
         page_posts = page.object_list
         self.assertIn(post, page_posts)
 
@@ -265,7 +265,7 @@ class PostPagesTests(TestCase):
         non_follower = Client()
         non_follower.force_login(user)
         response = non_follower.get(reverse('follow_index'))
-        page = response.context.get('page')
+        page = response.context['page']
         page_posts = page.object_list
         self.assertNotIn(post, page_posts)
 

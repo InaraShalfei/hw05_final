@@ -281,3 +281,9 @@ class PostPagesTests(TestCase):
         self.assertTrue(Follow.objects.filter(author=author, user=self.user).exists())
         self.authorized_client.get(reverse('profile_unfollow', kwargs={'username': author.username}))
         self.assertFalse(Follow.objects.filter(author=author, user=self.user).exists())
+
+    def test_user_can_not_follow_for_himself(self):
+        self.assertFalse(Follow.objects.filter(author=self.user, user=self.user).exists())
+        self.authorized_client.get(reverse('profile_follow', kwargs={'username': self.user.username}))
+        self.assertFalse(Follow.objects.filter(author=self.user, user=self.user).exists())
+

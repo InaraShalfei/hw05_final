@@ -35,7 +35,7 @@
                 <!-- Ссылка на страницу записи в атрибуте href-->
 
                 <!-- Ссылка на редактирование, показывается только автору записи -->
-                {% if request.user == user %}
+                {% if request.user == post.author %}
                 <a class="btn btn-sm text-muted" href="{% url 'post_edit' post.author.username post.id %}"
                    role="button">Редактировать</a>
 
